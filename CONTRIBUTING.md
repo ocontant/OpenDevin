@@ -9,7 +9,7 @@ To report bugs, create a [GitHub issue](https://github.com/OpenDevin/OpenDevin/i
 Fork [OpenDevin repository](https://github.com/OpenDevin/OpenDevin) into your own account.
 Clone your own forked repository into your local environment.
 
-```shell
+```shel
 git clone git@github.com:<YOUR-USERNAME>/OpenDevin.git
 ```
 
