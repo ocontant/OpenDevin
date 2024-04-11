@@ -28,7 +28,7 @@ At the moment, we have two kinds of tests: `unit` and `integration`. Please refe
 Fork the [OpenDevin repository](https://github.com/OpenDevin/OpenDevin) into your own account.
 Clone your own forked repository into your local environment:
 
-```shell
+```shel
 git clone git@github.com:<YOUR-USERNAME>/OpenDevin.git
 ```
 
