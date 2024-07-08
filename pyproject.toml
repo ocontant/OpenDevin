@@ -32,6 +32,7 @@ chromadb = "*"
 llama-index-embeddings-huggingface = "*"
 llama-index-embeddings-azure-openai = "*"
 llama-index-embeddings-ollama = "*"
+llama-index-embeddings-mistralai = "*"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"

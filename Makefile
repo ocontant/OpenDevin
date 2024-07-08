@@ -140,29 +140,61 @@ setup-config:
 
 setup-config-prompts:
 	@read -p "Enter your LLM Model name (see https://docs.litellm.ai/docs/providers for full list) [default: $(DEFAULT_MODEL)]: " llm_model; \
-	 llm_model=$${llm_model:-$(DEFAULT_MODEL)}; \
-	 echo "LLM_MODEL=\"$$llm_model\"" > $(CONFIG_FILE).tmp
+	 echo "LLM_MODEL=\"$${llm_model:-$(DEFAULT_MODEL)}\"" > $(CONFIG_FILE).tmp
 
 	@read -p "Enter your LLM API key: " llm_api_key; \
 	 echo "LLM_API_KEY=\"$$llm_api_key\"" >> $(CONFIG_FILE).tmp
 
-	@read -p "Enter your LLM Base URL [mostly used for local LLMs, leave blank if not needed - example: http://localhost:5001/v1/]: " llm_base_url; \
-	 if [[ ! -z "$$llm_base_url" ]]; then echo "LLM_BASE_URL=\"$$llm_base_url\"" >> $(CONFIG_FILE).tmp; fi
+	@read -p "Enter your LLM Base URL [mostly used for local LLMs, leave blank if not needed - example for ollama: http://localhost:11434]: " LLM_BASE_URL; \
+	 if [[ ! -z "$$llm_base_url" ]]; then echo "LLM_BASE_URL=\"$${llm_base_url:-"http://localhost:11434"}\"" >> $(CONFIG_FILE).tmp; fi
 
-	@echo "Enter your LLM Embedding Model\nChoices are openai, azureopenai, llama2 or leave blank to default to 'BAAI/bge-small-en-v1.5' via huggingface"; \
-	 read -p "> " llm_embedding_model; \
-	 	echo "LLM_EMBEDDING_MODEL=\"$$llm_embedding_model\"" >> $(CONFIG_FILE).tmp; \
-		if [ "$$llm_embedding_model" = "llama2" ]; then \
-			read -p "Enter the local model URL (will overwrite LLM_BASE_URL): " llm_base_url; \
-				echo "LLM_BASE_URL=\"$$llm_base_url\"" >> $(CONFIG_FILE).tmp; \
-		elif [ "$$llm_embedding_model" = "azureopenai" ]; then \
-			read -p "Enter the Azure endpoint URL (will overwrite LLM_BASE_URL): " llm_base_url; \
-				echo "LLM_BASE_URL=\"$$llm_base_url\"" >> $(CONFIG_FILE).tmp; \
-			read -p "Enter the Azure LLM Deployment Name: " llm_deployment_name; \
-				echo "LLM_DEPLOYMENT_NAME=\"$$llm_deployment_name\"" >> $(CONFIG_FILE).tmp; \
-			read -p "Enter the Azure API Version: " llm_api_version; \
-				echo "LLM_API_VERSION=\"$$llm_api_version\"" >> $(CONFIG_FILE).tmp; \
-		fi
+	@status=0; \
+	while [ $$status -eq 0 ]; do \
+		echo "Enter your LLM Embedding Strategy\nChoices are openai, azureopenai, ollama, mistral, huggingface, or leave blank to default to 'BAAI/bge-small-en-v1.5' via huggingface"; \
+		read -p "> " llm_embedding_strategy; \
+		echo "LLM_EMBEDDING_STRATEGY=\"$$llm_embedding_strategy\"" >> $(CONFIG_FILE).tmp; \
+			if [ "$$llm_embedding_strategy" = "ollama" ]; then \
+				read -p "Enter the local Ollama embedding model name (will overwrite LLM_EMBEDDING_MODEL) [default: "llama2"]: " llm_embedding_model; \
+					echo "LLM_EMBEDDING_MODEL=\"$${llm_embedding_model:-\"llama2\"}\"" >> $(CONFIG_FILE).tmp; \
+				read -p "Enter the local Ollama endpoint URL (will overwrite LLM_EMBEDDING_BASE_URL) [default: "http:localhost:11434"] : " llm_embedding_base_url; \
+					echo "LLM_EMBEDDING_BASE_URL=\"$${llm_embedding_base_url:-\"http://localhost:11434\"}\"" >> $(CONFIG_FILE).tmp; \
+				status=1; \
+			elif [ "$$llm_embedding_strategy" = "openai" ]; then \
+				read -p "Enter the OpenAI embedding model name (will overwrite LLM_EMBEDDING_MODEL) [default: "text-embedding-ada-002"]: " llm_embedding_model; \
+					echo "LLM_EMBEDDING_MODEL=\"$${llm_embedding_model:-\"text-embedding-ada-002\"}\"" >> $(CONFIG_FILE).tmp; \
+				read -p "Enter your OpenAI API Key (will overwrite LLM_EMBEDDING_API_KEY): " llm_embedding_api_key; \
+					echo "LLM_EMBEDDING_API_KEY=\$$llm_embedding_api_key\""  >> $(CONFIG_FILE).tmp; \
+				status=1; \
+			elif [ "$$llm_embedding_strategy" = "azureopenai" ]; then \
+				read -p "Enter the Azure OpenAI embedding model name (will overwrite LLM_EMBEDDING_MODEL) [default: "text-embedding-ada-002"]: " llm_embedding_model; \
+					echo "LLM_EMBEDDING_MODEL=\"$${llm_embedding_model:-\"text-embedding-ada-002\"}\"" >> $(CONFIG_FILE).tmp; \
+				read -p "Enter the Azure OpenAI endpoint URL (will overwrite LLM_EMBEDDING_BASE_URL): " llm_embedding_base_url; \
+					echo "LLM_EMBEDDING_BASE_URL=\"$$llm_embedding_base_url\"" >> $(CONFIG_FILE).tmp; \
+				read -p "Enter your Azure OpenAI API Key (will overwrite LLM_EMBEDDING_API_KEY): " llm_embedding_api_key; \
+					echo "LLM_EMBEDDING_API_KEY=\$$llm_embedding_api_key\""  >> $(CONFIG_FILE).tmp; \
+				read -p "Enter the Azure OpenAI LLM Deployment Name: " llm_embedding_deployment_name; \
+					echo "LLM_EMBEDDING_DEPLOYMENT_NAME=\"$$llm_embedding_deployment_name\"" >> $(CONFIG_FILE).tmp; \
+				read -p "Enter the Azure OpenAI API Version: " llm_embedding_api_version; \
+					echo "llm_embedding_api_version=\"$$llm_embedding_api_version\"" >> $(CONFIG_FILE).tmp; \
+				status=1; \
+			elif [ "$$llm_embedding_strategy" = "mistral" ]; then \
+				read -p "Enter the Mistral embedding model name (will overwrite LLM_EMBEDDING_MODEL) [default: "mistral-embed"]: " llm_embedding_model; \
+					llm_embedding_model=$${llm_embedding_model:-"mistral-embed"}; \
+					echo "LLM_EMBEDDING_MODEL=\"$${llm_embedding_model:-\"mistral-embed\"}\"" >> $(CONFIG_FILE).tmp; \
+				read -p "Enter the Mistra API Key: " llm_embedding_api_key; \
+					echo "LLM_EMBEDDING_API_KEY=\"$$llm_embedding_api_key\"" >> $(CONFIG_FILE).tmp; \
+				status=1; \
+			elif [[ "$$llm_embedding_strategy" = "huggingface" || "$$llm_embedding_strategy" = "" ]]; then \
+				read -p "Enter the HuggingFace embedding model name (will overwrite LLM_EMBEDDING_MODEL) [default: "BAAI/bge-small-en-v1.5"]: " llm_embedding_model; \
+					echo "LLM_EMBEDDING_MODEL=\"$${llm_embedding_model:-\"BAAI/bge-small-en-v1.5\"}\"" >> $(CONFIG_FILE).tmp; \
+				status=1; \
+			else \
+				echo ""; \
+				echo ""; \
+				echo "Invalid LLM embedding strategy: $$llm_embedding_strategy".  Try Again!; \
+				echo ""; \
+			fi; \
+		done
 
 	@read -p "Enter your workspace directory [default: $(DEFAULT_WORKSPACE_DIR)]: " workspace_dir; \
 	 workspace_dir=$${workspace_dir:-$(DEFAULT_WORKSPACE_DIR)}; \
